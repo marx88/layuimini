@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
     <meta charset="utf-8">
     <title>layuimini-单页版 v2 - 基于Layui的后台管理系统前端模板</title>
@@ -19,8 +19,8 @@
     <link rel="stylesheet" href="css/themes/default.css" media="all">
     <link rel="stylesheet" href="css/public.css" media="all">
     <!--[if lt IE 9]>
-    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
-    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+    <script src="js/ie/html5shiv-r29-html5.min.js"></script>
+    <script src="js/ie/respond.1.4.2.min.js"></script>
     <![endif]-->
     <style id="layuimini-bg-color">
     </style>
@@ -122,7 +122,8 @@
         var $ = layui.jquery,
             layer = layui.layer,
             miniAdmin = layui.miniAdmin,
-            miniTongji = layui.miniTongji;
+            miniTongji = layui.miniTongji,
+            loginUlr = '/page/login-3.html';
 
         var options = {
             iniUrl: "api/init.json",    // 初始化接口
@@ -133,6 +134,9 @@
             menuChildOpen: false,       // 是否默认展开菜单
             loadingTime: 0,             // 初始化加载时间
             pageAnim: true,             // 切换菜单动画
+            successCode: 0,             // 接口响应成功的状态码
+            unLoginCode: 999,           // 未登录系统的状态码
+            loginUrl: loginUlr,         // 登录页地址
         };
         miniAdmin.render(options);
 
@@ -147,8 +151,8 @@
         });
 
         $('.login-out').on("click", function () {
-            layer.msg('退出登录成功', function () {
-                window.location = 'page/login-3.html';
+            miniAdmin.success('退出登录成功', function () {
+                miniAdmin.redirect(loginUlr, false);
             });
         });
     });

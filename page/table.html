@@ -56,11 +56,12 @@
 </div>
 
 <script>
-    layui.use(['form', 'table','miniPage','element'], function () {
+    layui.use(['form', 'table','miniPage','element', 'miniAdmin'], function () {
         var $ = layui.jquery,
             form = layui.form,
             table = layui.table,
-            miniPage = layui.miniPage;
+            miniPage = layui.miniPage
+            , miniAdmin = layui.miniAdmin;
 
         table.render({
             elem: '#currentTableId',
@@ -88,6 +89,10 @@
             limit: 15,
             page: true,
             skin: 'line'
+            , done: function (resp) {
+                // 添加登录校验
+                miniAdmin.checkLogin(resp);
+            }
         });
 
         // 监听搜索操作

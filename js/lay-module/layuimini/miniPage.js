@@ -8,7 +8,8 @@ layui.define(["element", "jquery"], function (exports) {
     var element = layui.element,
         $ = layui.$,
         // miniAdmin = layui.miniAdmin,
-        layer = layui.layer;
+        layer = layui.layer
+        , renderPageVersion;
 
 
     var miniPage = {
@@ -24,6 +25,7 @@ layui.define(["element", "jquery"], function (exports) {
             options.renderPageVersion = options.renderPageVersion || false;
             options.listenSwichCallback = options.listenSwichCallback || function () {
             };
+            renderPageVersion = options.renderPageVersion || false;
             var href = location.hash.replace(/^#\//, '');
             if (href === null || href === undefined || href === '') {
                 miniPage.renderHome(options);
@@ -102,7 +104,7 @@ layui.define(["element", "jquery"], function (exports) {
             options.renderPageVersion = options.renderPageVersion || false;
             var container = '.layuimini-content-page';
             if (options.renderPageVersion) {
-                var v = new Date().getTime();
+                var v = true === options.renderPageVersion ? new Date().getTime() : options.renderPageVersion;
                 href = href.indexOf("?") > -1 ? href + '&v=' + v : href + '?v=' + v;
             }
             if ($(".layuimini-page-header").hasClass("layui-hide")) {
@@ -171,7 +173,7 @@ layui.define(["element", "jquery"], function (exports) {
          */
         getHrefContent: function (href) {
             var content = '';
-            var v = new Date().getTime();
+            var v = true === renderPageVersion ? new Date().getTime() : renderPageVersion;
             $.ajax({
                 url: href.indexOf("?") > -1 ? href + '&v=' + v : href + '?v=' + v,
                 type: 'get',
@@ -351,7 +353,6 @@ layui.define(["element", "jquery"], function (exports) {
 
 
         },
-
 
         /**
          * 监听hash变化

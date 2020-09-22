@@ -4,13 +4,18 @@
  * version:2.0
  * description:layuimini 主体框架扩展
  */
-layui.define(["jquery", "miniMenu", "element","miniPage", "miniTheme"], function (exports) {
+layui.define(["jquery", "miniMenu", "element","miniPage", "miniTheme", "mAjax"], function (exports) {
     var $ = layui.$,
         element = layui.element,
         layer = layui.layer,
         miniMenu = layui.miniMenu,
         miniTheme = layui.miniTheme,
-        miniPage = layui.miniPage;
+        miniPage = layui.miniPage,
+        mAjax = layui.mAjax,
+        successCode,
+        unLoginCode,
+        renderPageVersion,
+        loginUrl;
 
     if (!/http(s*):\/\//.test(location.href)) {
         var tips = "请先将项目部署至web容器（Apache/Tomcat/Nginx/IIS/等），否则部分数据将无法显示";
@@ -29,6 +34,9 @@ layui.define(["jquery", "miniMenu", "element","miniPage", "miniTheme"], function
          * @param options.menuChildOpen 是否展开子菜单
          * @param options.loadingTime 初始化加载时间
          * @param options.pageAnim 切换菜单动画
+         * @param options.unLoginCode 未登录的code
+         * @param options.successCode 成功的code
+         * @param options.loginUrl 登录页面地址
          */
         render: function (options) {
             options.iniUrl = options.iniUrl || null;
@@ -39,10 +47,16 @@ layui.define(["jquery", "miniMenu", "element","miniPage", "miniTheme"], function
             options.menuChildOpen = options.menuChildOpen || false;
             options.loadingTime = options.loadingTime || 1;
             options.pageAnim = options.pageAnim || false;
-            $.getJSON(options.iniUrl, function (data) {
-                if (data == null) {
-                    miniAdmin.error('暂无菜单信息')
+            renderPageVersion = options.renderPageVersion;
+            successCode = options.successCode || 0;
+            loginUrl = options.loginUrl || '/404.html';
+            unLoginCode = isNaN(parseInt(options.unLoginCode)) ? null : options.unLoginCode;
+            mAjax.setDoneHook(miniAdmin.checkLogin);
+            mAjax.getJSON(options.iniUrl, {}, function (resp) {
+                if (!miniAdmin.isSuccessResp(resp)) {
+                    miniAdmin.error('系统信息加载失败')
                 } else {
+                    data = resp.data;
                     miniAdmin.renderLogo(data.logoInfo);
                     miniAdmin.renderClear(options.clearUrl);
                     miniAdmin.renderAnim(options.pageAnim);
@@ -72,7 +86,7 @@ layui.define(["jquery", "miniMenu", "element","miniPage", "miniTheme"], function
                     miniAdmin.deleteLoader(options.loadingTime);
                 }
             }).fail(function () {
-                miniAdmin.error('菜单接口有误');
+                miniAdmin.error('系统信息加载异常');
             });
         },
 
@@ -172,7 +186,6 @@ layui.define(["jquery", "miniMenu", "element","miniPage", "miniTheme"], function
             }
         },
 
-
         /**
          * 初始化加载时间
          * @param loadingTime
@@ -186,19 +199,23 @@ layui.define(["jquery", "miniMenu", "element","miniPage", "miniTheme"], function
         /**
          * 成功
          * @param title
+         * @param callback
          * @returns {*}
          */
-        success: function (title) {
-            return layer.msg(title, {icon: 1, shade: this.shade, scrollbar: false, time: 2000, shadeClose: true});
+        success: function (title, callback) {
+            var cfg = {icon: 1, shade: this.shade, scrollbar: false, time: 2000, shadeClose: true};
+            return layer.msg(title, cfg, callback || function () {});
         },
 
         /**
          * 失败
          * @param title
+         * @param callback
          * @returns {*}
          */
-        error: function (title) {
-            return layer.msg(title, {icon: 2, shade: this.shade, scrollbar: false, time: 3000, shadeClose: true});
+        error: function (title, callback) {
+            var cfg = {icon: 2, shade: this.shade, scrollbar: false, time: 3000, shadeClose: true};
+            return layer.msg(title, cfg, callback || function () {});
         },
 
         /**
@@ -324,6 +341,56 @@ layui.define(["jquery", "miniMenu", "element","miniPage", "miniTheme"], function
                 miniAdmin.renderDevice();
             });
 
+        }
+
+        /**
+         * 判断接口是否正常响应
+         * @param resp
+         * @returns {boolean} true：请求正常；false：请求失败
+         */
+        , isSuccessResp: function (resp) {
+            return !!(resp && successCode === resp.code - 0 && resp.code !== null);
+        }
+
+        /**
+         * 判断是否未登录状态 是则跳转登录页
+         * @param resp
+         * @returns {boolean} true：未登录；false：已登录
+         */
+        , isUnLoginResp: function (resp_code) {
+            return unLoginCode === resp_code - 0 && resp_code !== null;
+        }
+
+        /**
+         * 登录检查
+         * @param resp
+         */
+        , checkLogin: function (resp) {
+            if (miniAdmin.isUnLoginResp(resp.code)) {
+                miniAdmin.error('请登录！', function () {
+                    miniAdmin.redirect(loginUrl, false);
+                });
+            }
+        }
+
+        /**
+         * 弹出加载层
+         * @param msg 加载层信息
+         * @param options
+         * @returns {int}
+         */
+        , load: function (msg, options) {
+            return layer.msg(msg || '加载中...', $.extend({icon: 16, time: 0, shade: 0.2}, options || {}));
+        }
+
+        /**
+         * 地址栏重定向
+         * @param href
+         * @param blank
+         */
+        , redirect: function (href, blank) {
+            var v = true === renderPageVersion ? new Date().getTime() : renderPageVersion;
+            window.open(href + (-1 < href.indexOf('?') ? '&_v=' : '?_v=') + v, blank ? '_blank' : '_self');
         }
     };
 
